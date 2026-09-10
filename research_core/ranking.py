@@ -44,6 +44,40 @@ def cosine_similarity(left: Sequence[float], right: Sequence[float]) -> float:
     return dot / (left_norm * right_norm) if left_norm and right_norm else 0.0
 
 
+def evidence_rank_score(
+    title: str,
+    snippet: str,
+    url: str = "",
+    *,
+    query_is_commercial: bool = True,
+    evidence_signals: Sequence[str] = DEFAULT_EVIDENCE_SIGNALS,
+    weak_signals: Sequence[str] = DEFAULT_WEAK_SIGNALS,
+    config: RankingConfig | None = None,
+) -> float:
+    """Score generic evidence quality signals independently from subject relevance.
+
+    Applications that keep their own subject-specific ranking can add this score before
+    cutting a fetch shortlist. The same evidence behaviour is therefore reusable without
+    forcing consumers to replace their existing candidate models or relevance policy.
+    """
+    cfg = config or RankingConfig()
+    item_title = str(title or "")
+    item_snippet = str(snippet or "")
+    item_url = str(url or "")
+    corpus = f"{item_title} {item_snippet} {item_url}"
+    lower_corpus = corpus.lower()
+
+    score = 0.0
+    if item_url.split("?", 1)[0].lower().endswith(".pdf"):
+        score += cfg.pdf_bonus
+    score += sum(cfg.evidence_signal_bonus for signal in evidence_signals if signal.lower() in lower_corpus)
+    score += cfg.commercial_evidence_weight * commercial_evidence_score(
+        corpus, query_is_commercial=query_is_commercial
+    )
+    score -= sum(cfg.weak_signal_penalty for signal in weak_signals if signal.lower() in lower_corpus)
+    return score
+
+
 def rank_candidates(
     candidates: Iterable[T],
     target_text: str,
@@ -91,15 +125,15 @@ def rank_candidates(
         score = float(len(present))
         score += cfg.numeric_weight * len(numeric_present)
         score += cfg.title_weight * len(target_terms & title_terms)
-        if item_url.split("?", 1)[0].lower().endswith(".pdf"):
-            score += cfg.pdf_bonus
-
-        lower_corpus = corpus.lower()
-        score += sum(cfg.evidence_signal_bonus for signal in evidence_signals if signal.lower() in lower_corpus)
-        score += cfg.commercial_evidence_weight * commercial_evidence_score(
-            corpus, query_is_commercial=query_is_commercial
+        score += evidence_rank_score(
+            item_title,
+            item_snippet,
+            item_url,
+            query_is_commercial=query_is_commercial,
+            evidence_signals=evidence_signals,
+            weak_signals=weak_signals,
+            config=cfg,
         )
-        score -= sum(cfg.weak_signal_penalty for signal in weak_signals if signal.lower() in lower_corpus)
 
         # A result returned by a complementary query gets no free relevance points,
         # but a query whose terms are visibly reflected in the result gets a small
