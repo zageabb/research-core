@@ -4,17 +4,20 @@ Shared research engine for Tender Designer, Internet Pricing, and Should-Cost In
 
 `research-core` owns reusable research mechanics. Each application keeps its domain-specific prompts, policy, compliance rules, pricing logic and estimator behaviour.
 
-## Current v0.1.0 scope
+## Current v0.2.0 scope
 
 - Generic quality-led research loop
 - Candidate pooling and unread-candidate lifecycle
 - Dynamic page/round budgeting with hard safety ceilings
 - Stagnation and stop/continue decisions
 - Generic lexical/technical candidate ranking
+- Numeric/specification-aware ranking for engineering and product searches
+- Commercial evidence signals for prices, awards, BOQs, quotations, invoices and transaction data
+- Candidate ranking based on returned title/snippet/URL rather than leaking the originating query into relevance scoring
 - Optional embedding similarity weighting
 - Domain diversity
 - Shared evidence quality levels: `strong`, `useful`, `weak`, `reject`
-- Relevant-passage extraction
+- Evidence-preserving passage extraction that retains concrete price/award passages alongside technical matches
 - Evidence-ledger formatting
 
 Search providers, HTTP/PDF/browser retrieval and app-specific LLM prompts remain in the applications for the first migration phase. They can be moved behind core interfaces later without forcing all three applications to change at once.
