@@ -35,6 +35,56 @@ def test_matching_datasheet_ranks_before_generic_result():
     assert ranked[0].url.endswith("nx12-datasheet.pdf")
 
 
+def test_originating_query_does_not_make_irrelevant_result_look_exact():
+    target = "11 kV 2000 A 25 kA switchgear price"
+    candidates = [
+        Candidate(
+            "General electrical catalogue",
+            "https://weak.example.com/catalogue",
+            "Low voltage accessories and unrelated equipment.",
+            query=target,
+        ),
+        Candidate(
+            "11 kV switchgear import transaction",
+            "https://trade.example.com/11kv-switchgear",
+            "11 kV 2000 A 25 kA incomer panel transaction value USD 15,979.85.",
+            query="11 kV 2000 A 25 kA switchgear import export customs",
+        ),
+    ]
+    ranked = rank_candidates(
+        candidates,
+        target,
+        title=lambda item: item.title,
+        snippet=lambda item: item.snippet,
+        url=lambda item: item.url,
+        query=lambda item: item.query,
+    )
+    assert "trade.example.com" in ranked[0].url
+
+
+def test_commercial_evidence_ranks_before_technical_only_when_pricing_requested():
+    candidates = [
+        Candidate(
+            "11 kV 630 A 25 kA switchgear technical specification",
+            "https://oem.example.com/spec",
+            "IEC 62271-200 metal-clad switchgear, 11 kV, 630 A, 25 kA.",
+        ),
+        Candidate(
+            "11 kV 630 A 25 kA tender award",
+            "https://tender.example.com/award",
+            "Winning bid INR 4,663,359 for seven 11 kV 630 A 25 kA panels.",
+        ),
+    ]
+    ranked = rank_candidates(
+        candidates,
+        "11 kV 630 A 25 kA switchgear tender award price",
+        title=lambda item: item.title,
+        snippet=lambda item: item.snippet,
+        url=lambda item: item.url,
+    )
+    assert "tender.example.com" in ranked[0].url
+
+
 def test_domain_diversity_defers_excess_results():
     candidates = [
         Candidate(f"Exact datasheet {index}", f"https://same.example.com/p{index}.pdf", "12 kV 3150 A")
