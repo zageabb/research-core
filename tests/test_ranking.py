@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from research_core.ranking import RankingConfig, rank_candidates
+from research_core.ranking import RankingConfig, evidence_rank_score, rank_candidates
 
 
 @dataclass
@@ -83,6 +83,27 @@ def test_commercial_evidence_ranks_before_technical_only_when_pricing_requested(
         url=lambda item: item.url,
     )
     assert "tender.example.com" in ranked[0].url
+
+
+def test_evidence_rank_score_can_be_reused_before_an_app_fetch_shortlist():
+    commercial = evidence_rank_score(
+        "11 kV switchgear tender award",
+        "BOQ unit price INR 402,543 for each 630 A VCB panel.",
+        "https://procurement.example.com/award.pdf",
+    )
+    generic = evidence_rank_score(
+        "11 kV switchgear overview",
+        "General product marketing page with no commercial or technical evidence.",
+        "https://example.com/switchgear",
+    )
+    weak = evidence_rank_score(
+        "Top 10 switchgear reviews",
+        "Forum review roundup.",
+        "https://example.com/reviews",
+    )
+
+    assert commercial > generic
+    assert generic > weak
 
 
 def test_domain_diversity_defers_excess_results():
