@@ -4,7 +4,7 @@ Shared research engine for Tender Designer, Internet Pricing, and Should-Cost In
 
 `research-core` owns reusable research mechanics. Each application keeps its domain-specific prompts, policy, compliance rules, pricing logic and estimator behaviour.
 
-## Current v0.2.0 scope
+## Current v0.2.1 scope
 
 - Generic quality-led research loop
 - Candidate pooling and unread-candidate lifecycle
@@ -13,6 +13,7 @@ Shared research engine for Tender Designer, Internet Pricing, and Should-Cost In
 - Generic lexical/technical candidate ranking
 - Numeric/specification-aware ranking for engineering and product searches
 - Commercial evidence signals for prices, awards, BOQs, quotations, invoices and transaction data
+- Reusable `evidence_rank_score()` so applications can improve their own shortlist ranking without replacing their domain-specific relevance model
 - Candidate ranking based on returned title/snippet/URL rather than leaking the originating query into relevance scoring
 - Optional embedding similarity weighting
 - Domain diversity
@@ -40,6 +41,23 @@ search -> rank -> read -> source review -> coverage assessment
 ```
 
 The core owns the loop around those callbacks: candidate pooling, batches, dynamic depth, stagnation, and stopping.
+
+## Evidence-aware shortlist scoring
+
+Applications that keep an existing subject-specific ranker can add the shared evidence score before deciding which pages to fetch:
+
+```python
+from research_core import evidence_rank_score
+
+score += evidence_rank_score(
+    result.title,
+    result.snippet,
+    result.url,
+    query_is_commercial=True,
+)
+```
+
+The score rewards evidence-bearing source signals such as tenders, awards, BOQs, schedules of rates, quotations, invoices, customs/import-export transactions, PDFs and concrete commercial values, while applying a penalty to weak roundup/forum-style sources. Subject and specification matching still remains the responsibility of the consuming application's ranking policy.
 
 ## Install from GitHub
 
