@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "research-core"
-version = "0.2.0"
+version = "0.2.1"
 description = "Shared research engine primitives for Tender Designer, Internet Pricing, and Should-Cost Intelligence"
 readme = "README.md"
 requires-python = ">=3.10"
