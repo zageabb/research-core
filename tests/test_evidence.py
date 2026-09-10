@@ -12,6 +12,17 @@ def test_best_passages_prefers_query_terms_and_numbers():
     assert "3150 A" in passages[0]
 
 
+def test_best_passages_preserves_price_evidence_for_commercial_query():
+    content = (
+        "The 11 kV switchgear range includes indoor metal-clad panels and numerical protection.\n"
+        "The equipment supports 25 kA short-circuit ratings and 630 A feeder panels.\n"
+        "Tender award result: seven 11 kV 630 A 25 kA panels, winning bid INR 4,663,359.\n"
+        "Further product literature is available from the manufacturer."
+    )
+    passages = best_passages(content, "11 kV 630 A 25 kA switchgear tender award price", limit=2)
+    assert any("4,663,359" in passage for passage in passages)
+
+
 def test_evidence_ledger_preserves_quality():
     ledger = evidence_ledger([
         EvidenceRecord(
