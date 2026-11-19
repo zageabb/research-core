@@ -18,6 +18,10 @@ builds:
       path: dist
       kind: wheel
       activate: package-install
+library:
+  isolation: package-artifact
+  verify_commands:
+    - ["python3", "-m", "pytest", "-q", "tests"]
 deployment:
   strategy: library
   approval: explicit
