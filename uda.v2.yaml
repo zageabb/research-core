@@ -1,0 +1,28 @@
+# DEV-020 review-only V2 library candidate. No runtime or deployment execution.
+schema_version: 2
+application:
+  name: research-core
+  kind: library
+  display_name: Research Core
+source:
+  repository: zageabb/research-core
+  branch: main
+builds:
+  - name: python-wheel
+    toolchain: python
+    working_dir: .
+    commands:
+      - ["python3", "-m", "build", "--wheel"]
+    output_dir: dist
+    artifact:
+      path: dist
+      kind: wheel
+      activate: package-install
+deployment:
+  strategy: library
+  approval: explicit
+  auto_update: false
+  rollback: false
+  github_reporting: false
+lifecycle:
+  owner: research-core
